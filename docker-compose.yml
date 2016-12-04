@@ -1,0 +1,41 @@
+version: "2"
+
+services:
+  elastic_efk:
+    image: elasticsearch:5
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - ES_JAVA_OPTS=-Xmx1g -Xms1g
+      # - ES_HEAP_SIZE="2g"
+    restart: always
+
+  fluentd_efk:
+    build:
+      context: ./fluentd
+    image: fluentd_efk
+    ports:
+      - "24224:24224"
+      - "42185:42185"
+    volumes:
+      - fluentd_log:/fluentd/log
+    links:
+      - elastic_efk:elastichost
+    restart: always
+
+  kibana_efk:
+    image: kibana
+    ports:
+      - "5601:5601"
+    links:
+      - elastic_efk:elasticsearch
+
+    restart: always
+
+
+volumes:
+  fluentd_log:
+    driver: local-persist
+    driver_opts:
+      mountpoint: /home/jedi/dev/compose/efk/volumes/fluentd_log
